@@ -5,9 +5,9 @@ use std::collections::HashMap;
 
 #[derive(Eq, PartialEq, Clone, Debug)]
 pub struct Request {
-    url: String,
-    id: String,
-    user_slug: String,
+    pub url: String,
+    pub id: String,
+    pub user_slug: String,
 }
 
 impl Request {
