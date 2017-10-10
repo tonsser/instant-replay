@@ -4,7 +4,20 @@ version = "0.1.0"
 authors = ["davidpdrsn"]
 
 [dependencies]
+futures = "0.1"
+hyper = "0.11"
+tokio-core = "0.1"
+regex = "0.2"
+lazy_static = "0.2.9"
 
 [[bin]]
 name = "main"
 path = "src/bin/main.rs"
+
+[[bin]]
+name = "run"
+path = "src/bin/run.rs"
+
+[lib]
+name = "instant_replay"
+path = "src/lib.rs"
