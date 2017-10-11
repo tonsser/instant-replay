@@ -2,36 +2,29 @@ extern crate instant_replay;
 extern crate futures;
 extern crate hyper;
 
-use instant_replay::{Request, RequestRunner};
-use instant_replay::time_iter::repeat_for;
-use std::io::{self, Write};
-use std::time::{Duration};
-use std::thread::{spawn, JoinHandle};
-use std::sync::Arc;
+use instant_replay::{get_thread_count_from_args, AccessTokenLoader, InstantReplay};
+use instant_replay::logs_provider::{LogsFromRemoteFile, LogsProvider};
+use std::time::Duration;
+
+struct LoadAccessTokenFromDatabase;
+
+impl AccessTokenLoader for LoadAccessTokenFromDatabase {
+    fn access_token_from_user_slug(&self, user_slug: &String) -> Option<String> {
+        None
+    }
+}
 
 fn main() {
-    let reqs = Request::from_logs_file(&"test_fixtures/logs".to_string());
-    let req = Arc::new(reqs.first().unwrap().clone());
+    let remote_logs = LogsFromRemoteFile {
+        url: "https://tonsser-prod-file-uploads.s3-eu-west-1.amazonaws.com/uploads/af50726397f580ca73d1-wtf".to_string(),
+    };
 
-    let thread_count = 10;
+    InstantReplay {
+        // logs_provider: LogsFromFile { file_path: "test_fixtures/logs".to_string() },
+        logs_provider: remote_logs,
 
-    let threads = (1..(thread_count + 1)).map(|_| {
-        let req = Arc::clone(&req);
-
-        spawn(move || {
-            let mut runner = RequestRunner::new();
-
-            for _ in repeat_for(Duration::from_secs(10)) {
-                match runner.run_request(&req) {
-                    Ok(_) => print!("."),
-                    Err(_) => print!("f"),
-                };
-                io::stdout().flush().expect("Flushing failed");
-            }
-        })
-    }).collect::<Vec<JoinHandle<()>>>();
-
-    for t in threads {
-        t.join().unwrap();
-    }
+        access_token_loader: LoadAccessTokenFromDatabase,
+        thread_count: get_thread_count_from_args(),
+        run_for: Duration::from_secs(10),
+    }.run();
 }

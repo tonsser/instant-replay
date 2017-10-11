@@ -12,12 +12,10 @@ use std::process::{exit};
 
 fn get_thread_count_from_args() -> i32 {
     let args = env::args().collect::<Vec<String>>();
-
     if args.len() != 2 {
         println!("Needs exactly one arg");
         exit(1);
     }
-
     args.last().unwrap().parse().unwrap()
 }
 
