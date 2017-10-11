@@ -12,14 +12,6 @@ lazy_static = "0.2.9"
 hyper-tls = "0.1.2"
 postgres = { version = "0.15", features = ["with-openssl"] }
 
-[[bin]]
-name = "main"
-path = "src/bin/main.rs"
-
-[[bin]]
-name = "run"
-path = "src/bin/run.rs"
-
 [lib]
 name = "instant_replay"
 path = "src/lib.rs"
