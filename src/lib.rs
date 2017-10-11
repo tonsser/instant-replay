@@ -51,6 +51,7 @@ impl<T: AccessTokenLoader, K: LogsProvider> InstantReplay<T, K> {
                 let mut iteration = 0;
 
                 if requests.len() == 0 {
+                    println!("No requests");
                     return;
                 }
 

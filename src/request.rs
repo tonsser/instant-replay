@@ -10,7 +10,7 @@ pub struct Request {
 }
 
 pub trait AccessTokenLoader {
-    fn access_token_from_user_slug(&self, user_slug: &String) -> Option<String>;
+    fn access_token_from_user_slug(&mut self, user_slug: &String) -> Option<String>;
 }
 
 impl Request {
@@ -62,7 +62,7 @@ fn parse_request_ids_and_user_slugs(logs: &String) -> HashMap<String, String> {
         })
 }
 
-fn parse_requests<T: AccessTokenLoader>(logs: &String, access_token_loader: T) -> Vec<Request> {
+fn parse_requests<T: AccessTokenLoader>(logs: &String, mut access_token_loader: T) -> Vec<Request> {
     let request_ids_to_user_slugs = parse_request_ids_and_user_slugs(logs);
 
     get_request_lines(logs)
