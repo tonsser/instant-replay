@@ -1,10 +1,11 @@
 use request::{Request};
-use hyper::{Client, Response};
+use hyper;
+use hyper::{Client, Response, Method};
 use hyper::error::{Error};
 use hyper::client::{HttpConnector};
 use tokio_core::reactor::Core;
-use std::thread;
-use std::time::{Duration, Instant};
+
+header! { (Authorization, "Authorization") => [String] }
 
 pub struct RequestRunner {
     pub core: Core,
@@ -13,7 +14,7 @@ pub struct RequestRunner {
 
 impl RequestRunner {
     pub fn new() -> RequestRunner {
-        let mut core = Core::new().unwrap();
+        let core = Core::new().unwrap();
         let client = Client::new(&core.handle());
 
         RequestRunner {
@@ -22,9 +23,21 @@ impl RequestRunner {
         }
     }
 
-    pub fn run_request(&mut self, request: &Request) -> Result<Response, Error> {
-        let uri = format!("http://api.tonsser.com{}", request.url).parse().unwrap();
-        let request = self.client.get(uri);
-        self.core.run(request)
+    pub fn run_request(&mut self, host: &String, request: &Request) -> Result<Response, Error> {
+        let uri = format!("{}/{}", host, request.url).parse().unwrap();
+        let mut http_req = hyper::Request::new(Method::Get, uri);
+
+        let header = format!("Bearer {}", request.access_token.clone());
+
+        // println!(
+        //     "token: {}, slug: {}, url: {}",
+        //     request.access_token,
+        //     request.user_slug,
+        //     request.url,
+        //     );
+
+        http_req.headers_mut().set(Authorization(header));
+        let get = self.client.request(http_req);
+        self.core.run(get)
     }
 }

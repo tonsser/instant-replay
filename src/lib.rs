@@ -2,7 +2,7 @@ extern crate regex;
 extern crate hyper_tls;
 #[macro_use] extern crate lazy_static;
 extern crate futures;
-extern crate hyper;
+#[macro_use] extern crate hyper;
 extern crate tokio_core;
 
 mod request;
@@ -30,6 +30,7 @@ pub struct InstantReplay<T: AccessTokenLoader, K: LogsProvider> {
     pub logs_provider: K,
     pub thread_count: i32,
     pub run_for: Duration,
+    pub host: String,
 }
 
 impl<T: AccessTokenLoader, K: LogsProvider> InstantReplay<T, K> {
@@ -43,8 +44,12 @@ impl<T: AccessTokenLoader, K: LogsProvider> InstantReplay<T, K> {
 
         println!("thread_count: {}", self.thread_count);
 
+        let host = Arc::new(self.host.clone());
+        let duration = self.run_for.clone();
+
         let threads = repeat(self.thread_count).map(|_| {
             let requests = Arc::clone(&requests);
+            let host = Arc::clone(&host);
 
             spawn(move || {
                 let mut runner = RequestRunner::new();
@@ -55,15 +60,15 @@ impl<T: AccessTokenLoader, K: LogsProvider> InstantReplay<T, K> {
                     return;
                 }
 
-                for _ in repeat_for(Duration::from_secs(10)) {
+                println!("running for: {:?}", duration);
+                for _ in repeat_for(duration) {
                     iteration += 1;
 
                     let index = iteration % requests.len();
                     let request = requests.get(index)
                         .expect("failed to get request");
 
-                    println!("{}", request.url);
-                    match runner.run_request(&request) {
+                    match runner.run_request(&host, &request) {
                         Ok(_) => print!("."),
                         Err(_) => print!("f"),
                     };
