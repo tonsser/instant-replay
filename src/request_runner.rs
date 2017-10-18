@@ -3,6 +3,7 @@ use hyper;
 use hyper::{Client, Response, Method};
 use hyper::error::{Error};
 use hyper::client::{HttpConnector};
+use hyper::header::Connection;
 use tokio_core::reactor::Core;
 
 header! { (Authorization, "Authorization") => [String] }
@@ -28,6 +29,7 @@ impl RequestRunner {
         let mut http_req = hyper::Request::new(Method::Get, uri);
         let header = format!("Bearer {}", request.access_token.clone());
         http_req.headers_mut().set(Authorization(header));
+        http_req.headers_mut().set(Connection::close());
         let get = self.client.request(http_req);
         self.core.run(get)
     }
