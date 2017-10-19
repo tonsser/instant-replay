@@ -16,14 +16,15 @@ pub mod repeat;
 pub mod logs_provider;
 use logs_provider::{LogsProvider};
 
-use std::env;
-use std::process::{exit};
-use std::time::{Duration};
-use std::sync::Arc;
-use time_iter::repeat_for;
 use repeat::repeat;
-use std::thread::{spawn, JoinHandle};
+use std::env;
 use std::io::{self, Write};
+use std::process::{exit};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::thread::{spawn, JoinHandle};
+use std::time::{Duration};
+use time_iter::repeat_for;
 
 pub struct InstantReplay<T: AccessTokenLoader, K: LogsProvider> {
     pub access_token_loader: T,
@@ -46,11 +47,13 @@ impl<T: AccessTokenLoader, K: LogsProvider> InstantReplay<T, K> {
 
         let host = Arc::new(self.host.clone());
         let duration = self.run_for.clone();
-        let mut requests_run: i32 = 0;
+        // let mut requests_run: i32 = 0;
+        let requests_run = Arc::new(AtomicUsize::new(0));
 
         let threads = repeat(self.thread_count).map(|_| {
             let requests = Arc::clone(&requests);
             let host = Arc::clone(&host);
+            let requests_run = Arc::clone(&requests_run);
 
             spawn(move || {
                 let mut runner = RequestRunner::new();
@@ -73,7 +76,7 @@ impl<T: AccessTokenLoader, K: LogsProvider> InstantReplay<T, K> {
                         Ok(_) => print!("."),
                         Err(_) => print!("f"),
                     };
-                    requests_run += 1;
+                    requests_run.fetch_add(1, Ordering::SeqCst);
 
                     io::stdout().flush().expect("Flushing failed");
                 }
@@ -86,7 +89,7 @@ impl<T: AccessTokenLoader, K: LogsProvider> InstantReplay<T, K> {
 
         println!("\nthread_count: {}", self.thread_count);
         println!("duration: {:?}", self.run_for);
-        println!("requests_run: {}", requests_run);
+        println!("requests_run: {:?}", requests_run);
     }
 }
 
