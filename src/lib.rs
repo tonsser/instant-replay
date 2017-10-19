@@ -35,7 +35,7 @@ pub struct InstantReplay<T: AccessTokenLoader, K: LogsProvider> {
 }
 
 impl<T: AccessTokenLoader, K: LogsProvider> InstantReplay<T, K> {
-    pub fn run(self) {
+    pub fn run(self) -> usize {
         let requests = Arc::new(
             Request::from_logs_file(
                 &self.logs_provider.get_logs(),
@@ -47,7 +47,6 @@ impl<T: AccessTokenLoader, K: LogsProvider> InstantReplay<T, K> {
 
         let host = Arc::new(self.host.clone());
         let duration = self.run_for.clone();
-        // let mut requests_run: i32 = 0;
         let requests_run = Arc::new(AtomicUsize::new(0));
 
         let threads = repeat(self.thread_count).map(|_| {
@@ -89,7 +88,7 @@ impl<T: AccessTokenLoader, K: LogsProvider> InstantReplay<T, K> {
 
         println!("\nthread_count: {}", self.thread_count);
         println!("duration: {:?}", self.run_for);
-        println!("requests_run: {:?}", requests_run.load(Ordering::SeqCst));
+        requests_run.load(Ordering::SeqCst)
     }
 }
 
