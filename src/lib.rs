@@ -46,6 +46,7 @@ impl<T: AccessTokenLoader, K: LogsProvider> InstantReplay<T, K> {
 
         let host = Arc::new(self.host.clone());
         let duration = self.run_for.clone();
+        let mut requests_run: i32 = 0;
 
         let threads = repeat(self.thread_count).map(|_| {
             let requests = Arc::clone(&requests);
@@ -72,6 +73,7 @@ impl<T: AccessTokenLoader, K: LogsProvider> InstantReplay<T, K> {
                         Ok(_) => print!("."),
                         Err(_) => print!("f"),
                     };
+                    requests_run += 1;
 
                     io::stdout().flush().expect("Flushing failed");
                 }
@@ -83,6 +85,8 @@ impl<T: AccessTokenLoader, K: LogsProvider> InstantReplay<T, K> {
         }
 
         println!("\nthread_count: {}", self.thread_count);
+        println!("duration: {:?}", self.run_for);
+        println!("requests_run: {}", requests_run);
     }
 }
 

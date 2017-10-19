@@ -112,49 +112,49 @@ fn url_from_request_line(line: &str) -> String {
         .expect("No first match").as_str().to_string()
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
 
-    #[test]
-    fn it_finds_the_lines_that_are_get_requests() {
-        let line: String = "2017-10-10T10:47:53.385562+00:00 app[web.3]: [44bb3720-6e34-4951-8ab6-9304165172cc] [/26/teams/gj-la-haye-fouassier-u18-d2-masculin-groupe-d-93230] Started GET \"/26/teams/gj-la-haye-fouassier-u18-d2-masculin-groupe-d-93230\" for 80.215.91.225 at 2017-10-10 10:47:53 +0000".to_string();
+//     #[test]
+//     fn it_finds_the_lines_that_are_get_requests() {
+//         let line: String = "2017-10-10T10:47:53.385562+00:00 app[web.3]: [44bb3720-6e34-4951-8ab6-9304165172cc] [/26/teams/gj-la-haye-fouassier-u18-d2-masculin-groupe-d-93230] Started GET \"/26/teams/gj-la-haye-fouassier-u18-d2-masculin-groupe-d-93230\" for 80.215.91.225 at 2017-10-10 10:47:53 +0000".to_string();
 
-        let parsed_lines = get_request_lines(&"test_fixtures/logs".to_string());
+//         let parsed_lines = get_request_lines(&"test_fixtures/logs".to_string());
 
-        assert_eq!(parsed_lines.first(), Some(&line));
-        assert_eq!(parsed_lines.len(), 89);
-    }
+//         assert_eq!(parsed_lines.first(), Some(&line));
+//         assert_eq!(parsed_lines.len(), 89);
+//     }
 
-    #[test]
-    fn it_parses_the_request_lines() {
-        let requests = parse_requests(&"test_fixtures/logs".to_string());
+//     #[test]
+//     fn it_parses_the_request_lines() {
+//         let requests = parse_requests(&"test_fixtures/logs".to_string());
 
-        assert_eq!(requests.len(), 82);
+//         assert_eq!(requests.len(), 82);
 
-        let request = requests.first().unwrap();
-        assert_eq!(
-            request.url,
-            "/26/teams/gj-la-haye-fouassier-u18-d2-masculin-groupe-d-93230".to_string()
-            );
-        assert_eq!(
-            request.id,
-            "44bb3720-6e34-4951-8ab6-9304165172cc".to_string()
-            );
-        assert_eq!(
-            request.user_slug,
-            "matthias-lombard".to_string()
-            );
-    }
+//         let request = requests.first().unwrap();
+//         assert_eq!(
+//             request.url,
+//             "/26/teams/gj-la-haye-fouassier-u18-d2-masculin-groupe-d-93230".to_string()
+//             );
+//         assert_eq!(
+//             request.id,
+//             "44bb3720-6e34-4951-8ab6-9304165172cc".to_string()
+//             );
+//         assert_eq!(
+//             request.user_slug,
+//             "matthias-lombard".to_string()
+//             );
+//     }
 
-    #[test]
-    fn it_parses_request_ids_and_user_slugs() {
-        let ids_and_slugs = parse_request_ids_and_user_slugs(&"test_fixtures/logs".to_string());
+//     #[test]
+//     fn it_parses_request_ids_and_user_slugs() {
+//         let ids_and_slugs = parse_request_ids_and_user_slugs(&"test_fixtures/logs".to_string());
 
-        assert_eq!(
-            ids_and_slugs.get("44bb3720-6e34-4951-8ab6-9304165172cc"),
-            Some(&"matthias-lombard".to_string())
-            );
-        assert_eq!(ids_and_slugs.keys().len(), 117);
-    }
-}
+//         assert_eq!(
+//             ids_and_slugs.get("44bb3720-6e34-4951-8ab6-9304165172cc"),
+//             Some(&"matthias-lombard".to_string())
+//             );
+//         assert_eq!(ids_and_slugs.keys().len(), 117);
+//     }
+// }
