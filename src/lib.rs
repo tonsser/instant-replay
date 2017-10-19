@@ -89,7 +89,7 @@ impl<T: AccessTokenLoader, K: LogsProvider> InstantReplay<T, K> {
 
         println!("\nthread_count: {}", self.thread_count);
         println!("duration: {:?}", self.run_for);
-        println!("requests_run: {:?}", requests_run);
+        println!("requests_run: {:?}", requests_run.load(Ordering::SeqCst));
     }
 }
 
