@@ -43,8 +43,6 @@ impl<T: AccessTokenLoader, K: LogsProvider> InstantReplay<T, K> {
                 )
             );
 
-        println!("thread_count: {}", self.thread_count);
-
         let host = Arc::new(self.host.clone());
         let duration = self.run_for.clone();
         let requests_run = Arc::new(AtomicUsize::new(0));
@@ -63,7 +61,6 @@ impl<T: AccessTokenLoader, K: LogsProvider> InstantReplay<T, K> {
                     return;
                 }
 
-                println!("running for: {:?}", duration);
                 for _ in repeat_for(duration) {
                     iteration += 1;
 
@@ -86,8 +83,6 @@ impl<T: AccessTokenLoader, K: LogsProvider> InstantReplay<T, K> {
             t.join().expect("couldn't join thread");
         }
 
-        println!("\nthread_count: {}", self.thread_count);
-        println!("duration: {:?}", self.run_for);
         requests_run.load(Ordering::SeqCst)
     }
 }
