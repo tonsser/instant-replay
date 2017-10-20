@@ -10,6 +10,7 @@ pub use request::*;
 
 mod request_runner;
 use request_runner::*;
+pub use request_runner::PrepareHttpRequest;
 
 pub mod time_iter;
 pub mod repeat;
