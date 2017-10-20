@@ -25,6 +25,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::thread::{spawn, JoinHandle};
 use std::time::{Duration};
 use time_iter::repeat_for;
+use hyper::header::Connection;
 
 pub struct InstantReplay<T: AccessTokenLoader, K: LogsProvider> {
     pub access_token_loader: T,
@@ -53,7 +54,12 @@ impl<T: AccessTokenLoader, K: LogsProvider> InstantReplay<T, K> {
             let requests_run = Arc::clone(&requests_run);
 
             spawn(move || {
-                let mut runner = RequestRunner::new();
+                let request_preppers: Vec<Box<PrepareHttpRequest>> = vec![
+                    Box::new(SetConnectionHeader),
+                    Box::new(SetAuthHeader),
+                ];
+
+                let mut runner = RequestRunner::new(request_preppers);
                 let mut iteration = 0;
 
                 if requests.len() == 0 {
@@ -96,4 +102,33 @@ pub fn get_thread_count_from_args() -> i32 {
     }
 
     args.last().unwrap().parse().unwrap()
+}
+
+header! { (Authorization, "Authorization") => [String] }
+header! { (XBenchmarkRequest, "X-Benchmark-Request") => [bool] }
+
+struct SetAuthHeader;
+impl PrepareHttpRequest for SetAuthHeader {
+    fn call(&self, req_def: &Request, mut request: hyper::Request) -> hyper::Request {
+        let auth_header_value = format!("Bearer {}", req_def.access_token.clone());
+        request.headers_mut().set(Authorization(auth_header_value));
+        request
+    }
+}
+
+struct SetConnectionHeader;
+impl PrepareHttpRequest for SetConnectionHeader {
+    fn call(&self, _req_def: &Request, mut request: hyper::Request) -> hyper::Request {
+        request.headers_mut().set(Connection::close());
+        request
+    }
+}
+
+impl PrepareHttpRequest for Vec<Box<PrepareHttpRequest>> {
+    fn call(&self, req_def: &Request, mut request: hyper::Request) -> hyper::Request {
+        for p in self {
+            request = p.call(req_def, request);
+        }
+        request
+    }
 }
