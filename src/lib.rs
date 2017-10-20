@@ -57,6 +57,7 @@ impl<T: AccessTokenLoader, K: LogsProvider> InstantReplay<T, K> {
                 let request_preppers: Vec<Box<PrepareHttpRequest>> = vec![
                     Box::new(SetConnectionHeader),
                     Box::new(SetAuthHeader),
+                    Box::new(SetBenchmarkRequestHeader),
                 ];
 
                 let mut runner = RequestRunner::new(request_preppers);
@@ -120,6 +121,14 @@ struct SetConnectionHeader;
 impl PrepareHttpRequest for SetConnectionHeader {
     fn call(&self, _req_def: &Request, mut request: hyper::Request) -> hyper::Request {
         request.headers_mut().set(Connection::close());
+        request
+    }
+}
+
+struct SetBenchmarkRequestHeader;
+impl PrepareHttpRequest for SetBenchmarkRequestHeader {
+    fn call(&self, _req_def: &Request, mut request: hyper::Request) -> hyper::Request {
+        request.headers_mut().set(XBenchmarkRequest(true));
         request
     }
 }
