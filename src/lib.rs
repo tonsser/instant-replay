@@ -9,7 +9,8 @@ mod request;
 pub use request::*;
 
 mod request_runner;
-pub use request_runner::*;
+use request_runner::*;
+pub use request_runner::{PrepareHttpRequest};
 
 pub mod time_iter;
 pub mod repeat;
@@ -27,7 +28,10 @@ use std::time::{Duration};
 use time_iter::repeat_for;
 use hyper::header::Connection;
 
-pub struct InstantReplay<T: AccessTokenLoader, K: LogsProvider> {
+pub struct InstantReplay<T, K>
+    where T: AccessTokenLoader,
+          K: LogsProvider
+{
     pub access_token_loader: T,
     pub logs_provider: K,
     pub thread_count: i32,
@@ -35,7 +39,10 @@ pub struct InstantReplay<T: AccessTokenLoader, K: LogsProvider> {
     pub host: String,
 }
 
-impl<T: AccessTokenLoader, K: LogsProvider> InstantReplay<T, K> {
+impl<T, K> InstantReplay<T, K>
+    where T: AccessTokenLoader,
+          K: LogsProvider
+{
     pub fn run(self) -> usize {
         let requests = Arc::new(
             Request::from_logs_file(
