@@ -27,22 +27,25 @@ use std::time::{Duration};
 use time_iter::repeat_for;
 use hyper::header::Connection;
 
-pub struct InstantReplay<T, K>
+pub struct InstantReplay<T, K, U>
     where T: AccessTokenLoader,
-          K: LogsProvider
+          K: LogsProvider,
+          U: PrepareHttpRequest+Copy+Send+'static,
 {
     pub access_token_loader: T,
+    pub prepare_http_request: Option<U>,
     pub logs_provider: K,
     pub thread_count: i32,
     pub run_for: Duration,
     pub host: String,
 }
 
-impl<T, K> InstantReplay<T, K>
+impl<T, K, U> InstantReplay<T, K, U>
     where T: AccessTokenLoader,
-          K: LogsProvider
+          K: LogsProvider,
+          U: PrepareHttpRequest+Copy+Send
 {
-    pub fn run<U: PrepareHttpRequest+Copy+Send+'static>(self, prepare_http_request: Option<U>) -> usize {
+    pub fn run(self) -> usize {
         let requests = Arc::new(
             Request::from_logs_file(
                 &self.logs_provider.get_logs(),
@@ -53,6 +56,7 @@ impl<T, K> InstantReplay<T, K>
         let host = Arc::new(self.host.clone());
         let duration = self.run_for.clone();
         let requests_run = Arc::new(AtomicUsize::new(0));
+        let prepare_http_request = self.prepare_http_request;
 
         let threads = repeat(self.thread_count).map(|_| {
             let requests = Arc::clone(&requests);
@@ -62,9 +66,9 @@ impl<T, K> InstantReplay<T, K>
             spawn(move || {
                 let mut request_preppers: Vec<Box<PrepareHttpRequest>> = vec![
                     Box::new(SetConnectionHeader),
-                    Box::new(SetAuthHeader),
                     Box::new(SetBenchmarkRequestHeader),
                 ];
+
                 match prepare_http_request {
                     Some(p) => request_preppers.push(Box::new(p)),
                     None => {},
@@ -115,17 +119,7 @@ pub fn get_thread_count_from_args() -> i32 {
     args.last().unwrap().parse().unwrap()
 }
 
-header! { (Authorization, "Authorization") => [String] }
 header! { (XBenchmarkRequest, "X-Benchmark-Request") => [bool] }
-
-struct SetAuthHeader;
-impl PrepareHttpRequest for SetAuthHeader {
-    fn call(&self, req_def: &Request, mut request: hyper::Request) -> hyper::Request {
-        let auth_header_value = format!("Bearer {}", req_def.access_token.clone());
-        request.headers_mut().set(Authorization(auth_header_value));
-        request
-    }
-}
 
 struct SetConnectionHeader;
 impl PrepareHttpRequest for SetConnectionHeader {
@@ -148,13 +142,6 @@ impl PrepareHttpRequest for Vec<Box<PrepareHttpRequest>> {
         for p in self {
             request = p.call(req_def, request);
         }
-        request
-    }
-}
-
-struct NullRequestPrepper;
-impl PrepareHttpRequest for NullRequestPrepper {
-    fn call(&self, _req_def: &Request, mut request: hyper::Request) -> hyper::Request {
         request
     }
 }
