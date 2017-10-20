@@ -10,7 +10,6 @@ pub use request::*;
 
 mod request_runner;
 use request_runner::*;
-pub use request_runner::{PrepareHttpRequest};
 
 pub mod time_iter;
 pub mod repeat;
@@ -43,7 +42,7 @@ impl<T, K> InstantReplay<T, K>
     where T: AccessTokenLoader,
           K: LogsProvider
 {
-    pub fn run(self) -> usize {
+    pub fn run<U: PrepareHttpRequest+Copy+Send+'static>(self, prepare_http_request: Option<U>) -> usize {
         let requests = Arc::new(
             Request::from_logs_file(
                 &self.logs_provider.get_logs(),
@@ -61,11 +60,15 @@ impl<T, K> InstantReplay<T, K>
             let requests_run = Arc::clone(&requests_run);
 
             spawn(move || {
-                let request_preppers: Vec<Box<PrepareHttpRequest>> = vec![
+                let mut request_preppers: Vec<Box<PrepareHttpRequest>> = vec![
                     Box::new(SetConnectionHeader),
                     Box::new(SetAuthHeader),
                     Box::new(SetBenchmarkRequestHeader),
                 ];
+                match prepare_http_request {
+                    Some(p) => request_preppers.push(Box::new(p)),
+                    None => {},
+                }
 
                 let mut runner = RequestRunner::new(request_preppers);
                 let mut iteration = 0;
@@ -145,6 +148,13 @@ impl PrepareHttpRequest for Vec<Box<PrepareHttpRequest>> {
         for p in self {
             request = p.call(req_def, request);
         }
+        request
+    }
+}
+
+struct NullRequestPrepper;
+impl PrepareHttpRequest for NullRequestPrepper {
+    fn call(&self, _req_def: &Request, mut request: hyper::Request) -> hyper::Request {
         request
     }
 }
