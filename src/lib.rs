@@ -64,17 +64,17 @@ impl<T, K, U> InstantReplay<T, K, U>
             let requests_run = Arc::clone(&requests_run);
 
             spawn(move || {
-                let mut request_preppers: Vec<Box<PrepareHttpRequest>> = vec![
+                let mut request_prepper: Vec<Box<PrepareHttpRequest>> = vec![
                     Box::new(SetConnectionHeader),
                     Box::new(SetBenchmarkRequestHeader),
                 ];
 
                 match prepare_http_request {
-                    Some(p) => request_preppers.push(Box::new(p)),
+                    Some(p) => request_prepper.push(Box::new(p)),
                     None => {},
                 }
 
-                let mut runner = RequestRunner::new(request_preppers);
+                let mut runner = RequestRunner::new(request_prepper);
                 let mut iteration = 0;
 
                 if requests.len() == 0 {
