@@ -1,8 +1,8 @@
-use request::{Request};
+use crate::request::Request;
 use hyper;
-use hyper::{Client, Response, Method};
-use hyper::error::{Error};
-use hyper::client::{HttpConnector};
+use hyper::client::HttpConnector;
+use hyper::error::Error;
+use hyper::{Client, Method, Response};
 use tokio_core::reactor::Core;
 
 pub trait PrepareHttpRequest {

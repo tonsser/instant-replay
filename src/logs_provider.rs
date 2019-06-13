@@ -1,8 +1,8 @@
-use futures::{Future, Stream};
-use hyper_tls::HttpsConnector;
 use futures::future;
+use futures::{Future, Stream};
 use hyper::error::Error;
 use hyper::Client;
+use hyper_tls::HttpsConnector;
 use std::fs::File;
 use std::io::prelude::*;
 use tokio_core::reactor::Core;
@@ -19,7 +19,8 @@ impl LogsProvider for LogsFromFile {
     fn get_logs(&self) -> String {
         let mut file = File::open(self.file_path.clone()).expect("file not found");
         let mut contents = String::new();
-        file.read_to_string(&mut contents).expect("something went wrong reading the file");
+        file.read_to_string(&mut contents)
+            .expect("something went wrong reading the file");
         contents
     }
 }

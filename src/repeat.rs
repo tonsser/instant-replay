@@ -1,5 +1,8 @@
 pub fn repeat(max: i32) -> Repeat {
-    Repeat { max: max, iteration: 0 }
+    Repeat {
+        max: max,
+        iteration: 0,
+    }
 }
 
 pub struct Repeat {

@@ -14,7 +14,10 @@ pub trait AccessTokenLoader {
 }
 
 impl Request {
-    pub fn from_logs_file<T: AccessTokenLoader>(logs: &String, access_token_loader: T) -> Vec<Request> {
+    pub fn from_logs_file<T: AccessTokenLoader>(
+        logs: &String,
+        access_token_loader: T,
+    ) -> Vec<Request> {
         parse_requests(logs, access_token_loader)
     }
 }
@@ -26,18 +29,14 @@ lazy_static! {
 }
 
 fn get_request_lines(logs: &String) -> Vec<String> {
-    logs
-        .lines()
+    logs.lines()
         .map(|line| line.to_string())
-        .filter(|line| {
-            REQUEST_LINE_PATTERN.is_match(line)
-        })
+        .filter(|line| REQUEST_LINE_PATTERN.is_match(line))
         .collect()
 }
 
 fn parse_request_ids_and_user_slugs(logs: &String) -> HashMap<String, String> {
-    logs
-        .lines()
+    logs.lines()
         .map(|line| line.to_string())
         .fold(HashMap::new(), |mut acc, line| {
             match USER_SLUG_PATTERN.captures(&line) {
@@ -46,18 +45,20 @@ fn parse_request_ids_and_user_slugs(logs: &String) -> HashMap<String, String> {
                     let slug = slug_captures
                         .get(1)
                         .expect("Failed getting user slug capture")
-                        .as_str().to_string();
+                        .as_str()
+                        .to_string();
 
                     let request_id = REQUEST_ID_PATTERN
                         .captures(&line)
                         .expect("Didn't match REQUEST_ID_PATTERN")
                         .get(1)
                         .expect("Failed getting request id capture")
-                        .as_str().to_string();
+                        .as_str()
+                        .to_string();
 
                     acc.insert(request_id, slug);
                     acc
-                },
+                }
             }
         })
 }
@@ -70,10 +71,9 @@ fn parse_requests<T: AccessTokenLoader>(logs: &String, mut access_token_loader: 
         .fold(Vec::new(), |mut acc, line| {
             let id = request_id_from_request_line(&line);
             let user_slug = user_slug_for_request_id(&id, &request_ids_to_user_slugs);
-            let access_token = user_slug.clone().and_then(|user_slug| {
-                access_token_loader
-                    .access_token_from_user_slug(&user_slug)
-            });
+            let access_token = user_slug
+                .clone()
+                .and_then(|user_slug| access_token_loader.access_token_from_user_slug(&user_slug));
 
             match (user_slug, access_token) {
                 (Some(user_slug), Some(access_token)) => {
@@ -84,7 +84,7 @@ fn parse_requests<T: AccessTokenLoader>(logs: &String, mut access_token_loader: 
                         access_token: access_token,
                     };
                     acc.push(req);
-                },
+                }
                 _ => (),
             }
 
@@ -92,7 +92,10 @@ fn parse_requests<T: AccessTokenLoader>(logs: &String, mut access_token_loader: 
         })
 }
 
-fn user_slug_for_request_id(id: &String, request_ids_to_user_slugs: &HashMap<String, String>) -> Option<String> {
+fn user_slug_for_request_id(
+    id: &String,
+    request_ids_to_user_slugs: &HashMap<String, String>,
+) -> Option<String> {
     request_ids_to_user_slugs.get(id).map(|slug| slug.clone())
 }
 
@@ -101,7 +104,9 @@ fn request_id_from_request_line(line: &str) -> String {
         .captures(line)
         .expect("REQUEST_ID_PATTERN didn't match")
         .get(1)
-        .expect("No first match").as_str().to_string()
+        .expect("No first match")
+        .as_str()
+        .to_string()
 }
 
 fn url_from_request_line(line: &str) -> String {
@@ -109,7 +114,9 @@ fn url_from_request_line(line: &str) -> String {
         .captures(line)
         .expect("REQUEST_LINE_PATTERN didn't match")
         .get(1)
-        .expect("No first match").as_str().to_string()
+        .expect("No first match")
+        .as_str()
+        .to_string()
 }
 
 // #[cfg(test)]
